@@ -2,11 +2,6 @@
 #include <stdio.h>
 #include <vector>
 
-const int lowLimit                 = 0;
-const int PassiveCoolingLimit      = 35;
-const int MediumActiveCoolingLimit = 40;
-const int HighActiveCoolingLimit   = 45;
-
 class CoolingBaseSollution{
   public:
   CoolingType coolType = UNDEFINED_COOLING;
@@ -35,29 +30,32 @@ class CoolingBaseSollution{
 
 class PassiveCooling : public CoolingBaseSollution{
   public: 
-    PassiveCooling():CoolingBaseSollution(
-      CoolingType::PASSIVE_COOLING,
-      lowLimit,
-      PassiveCoolingLimit)
+    PassiveCooling():
+      CoolingBaseSollution(
+        CoolingType::PASSIVE_COOLING,
+        LowLimit,
+        PassiveCoolingLimit)
     {};
 };
 
 
 class MediumActiveCooling : public CoolingBaseSollution{
   public: 
-    MediumActiveCooling():CoolingBaseSollution(
-      CoolingType::MED_ACTIVE_COOLING,
-      lowLimit,
-      MediumActiveCoolingLimit)
+    MediumActiveCooling():
+      CoolingBaseSollution(
+        CoolingType::MED_ACTIVE_COOLING,
+        LowLimit,
+        MediumActiveCoolingLimit)
     {};
 };
 
 class HighActiveCooling : public CoolingBaseSollution{
   public: 
-    HighActiveCooling():CoolingBaseSollution(
-      CoolingType::HI_ACTIVE_COOLING,
-      lowLimit,
-      HighActiveCoolingLimit)
+    HighActiveCooling():
+      CoolingBaseSollution(
+        CoolingType::HI_ACTIVE_COOLING,
+        LowLimit,
+        HighActiveCoolingLimit)
     {};
 };
 
@@ -83,12 +81,88 @@ class CoolingSollutionFactory{
   }
 };
 
+class BreachBaseHandler{
+  public:
+  AlertTarget target = AlertTarget::UNDEFINED_TARGET;
+
+  BreachBaseHandler(AlertTarget targetType):
+    target(targetType)
+  {}
+
+  virtual bool sendTarget(BreachType breach){
+    (void)breach;
+    return false;
+  }
+};
+
+class ControllerHandler : public BreachBaseHandler{
+  public:
+  ControllerHandler() : 
+    BreachBaseHandler(AlertTarget::TO_CONTROLLER)
+  {}
+
+  bool sendTarget(BreachType breach) override{
+    const unsigned short header = 0xfeed;
+    printf("%x : %x\n", header, breach);
+    return true;
+  }
+};
+
+class EmailHandler : public BreachBaseHandler{
+  public:
+  EmailHandler() :
+    BreachBaseHandler(AlertTarget::TO_EMAIL)
+  {}
+
+  bool sendTarget(BreachType breach) override{
+    const char* recepient = "a.b@c.com";
+    switch(breach) {
+      case TOO_LOW:
+        printf("To: %s\n", recepient);
+        printf("Hi, the temperature is too low\n");
+        break;
+      case TOO_HIGH:
+        printf("To: %s\n", recepient);
+        printf("Hi, the temperature is too high\n");
+        break;
+      case NORMAL:
+      default:
+        break;
+    }
+    return true;
+  }
+};
+
+class BreachHandlerFactory{
+  public:
+  EmailHandler      eHandling;
+  ControllerHandler chandling;
+
+  std::vector<BreachBaseHandler*> handlingSollutions = \
+    {&eHandling, &chandling};
+
+  BreachHandlerFactory(){}
+
+  BreachBaseHandler* getHandler(AlertTarget aTarget){
+    for(std::vector<BreachBaseHandler*>::iterator it = handlingSollutions.begin();
+        it != handlingSollutions.end(); it++){
+      if((*it)->target == aTarget){
+        return (*it);
+      }
+    }
+    return nullptr;
+  }
+};
+
 BreachType inferBreach(
     CoolingType coolingType, double temperatureInC) {
   CoolingSollutionFactory coolingFactory;
   CoolingBaseSollution* coolingSollution;
   coolingSollution = coolingFactory.getSollution(coolingType);
-  return coolingSollution->checkTemperatureBreach(temperatureInC);
+  if(coolingSollution != nullptr)
+    return coolingSollution->checkTemperatureBreach(temperatureInC);
+  else
+    return BreachType::UNDEFINED;
 }
 
 void monitorTemperature(
@@ -99,33 +173,8 @@ void monitorTemperature(
     batteryChar.coolingType, temperatureInC
   );
 
-  switch(alertTarget) {
-    case TO_CONTROLLER:
-      sendToController(breachType);
-      break;
-    case TO_EMAIL:
-      sendToEmail(breachType);
-      break;
-  }
-}
-
-void sendToController(BreachType breachType) {
-  const unsigned short header = 0xfeed;
-  printf("%x : %x\n", header, breachType);
-}
-
-void sendToEmail(BreachType breachType) {
-  const char* recepient = "a.b@c.com";
-  switch(breachType) {
-    case TOO_LOW:
-      printf("To: %s\n", recepient);
-      printf("Hi, the temperature is too low\n");
-      break;
-    case TOO_HIGH:
-      printf("To: %s\n", recepient);
-      printf("Hi, the temperature is too high\n");
-      break;
-    case NORMAL:
-      break;
-  }
+  BreachHandlerFactory bHandlerFactory;
+  BreachBaseHandler* breachHandler;
+  breachHandler = bHandlerFactory.getHandler(alertTarget);
+  breachHandler->sendTarget(breachType);
 }

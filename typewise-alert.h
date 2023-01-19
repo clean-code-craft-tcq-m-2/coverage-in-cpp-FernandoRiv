@@ -1,5 +1,10 @@
 #pragma once
 
+static const int LowLimit                 = 0;
+static const int PassiveCoolingLimit      = 35;
+static const int MediumActiveCoolingLimit = 40;
+static const int HighActiveCoolingLimit   = 45;
+
 typedef enum {
   PASSIVE_COOLING,
   HI_ACTIVE_COOLING,
@@ -10,12 +15,14 @@ typedef enum {
 typedef enum {
   NORMAL,
   TOO_LOW,
-  TOO_HIGH
+  TOO_HIGH,
+  UNDEFINED
 } BreachType;
 
 typedef enum {
   TO_CONTROLLER,
-  TO_EMAIL
+  TO_EMAIL,
+  UNDEFINED_TARGET
 } AlertTarget;
 
 typedef struct {

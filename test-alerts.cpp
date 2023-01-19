@@ -3,8 +3,15 @@
 #include "test/catch.hpp"
 #include "typewise-alert.h"
 
-TEST_CASE("infers the breach according to limits") {
-  double DegreesC = 20.0;
+TEST_CASE("Breach test for High active cooling, all temperatures") {
+  int DegreesC = HighActiveCoolingLimit;
   REQUIRE(inferBreach(CoolingType::HI_ACTIVE_COOLING, DegreesC)\
           == BreachType::NORMAL);
+  DegreesC = HighActiveCoolingLimit + 1;
+  REQUIRE(inferBreach(CoolingType::HI_ACTIVE_COOLING, DegreesC)\
+          == BreachType::TOO_HIGH);
+  DegreesC = LowLimit - 1;
+  REQUIRE(inferBreach(CoolingType::HI_ACTIVE_COOLING, DegreesC)\
+          == BreachType::TOO_LOW);
 }
+
