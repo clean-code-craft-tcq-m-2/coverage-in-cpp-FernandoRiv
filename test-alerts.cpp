@@ -4,5 +4,7 @@
 #include "typewise-alert.h"
 
 TEST_CASE("infers the breach according to limits") {
-  REQUIRE(inferBreach(12, 20, 30) == TOO_LOW);
+  double DegreesC = 20.0;
+  REQUIRE(inferBreach(CoolingType::HI_ACTIVE_COOLING, DegreesC)\
+          == BreachType::NORMAL);
 }

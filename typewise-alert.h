@@ -3,7 +3,8 @@
 typedef enum {
   PASSIVE_COOLING,
   HI_ACTIVE_COOLING,
-  MED_ACTIVE_COOLING
+  MED_ACTIVE_COOLING,
+  UNDEFINED_COOLING
 } CoolingType;
 
 typedef enum {
@@ -17,13 +18,12 @@ typedef enum {
   TO_EMAIL
 } AlertTarget;
 
-BreachType inferBreach(double value, double lowerLimit, double upperLimit);
-BreachType classifyTemperatureBreach(CoolingType coolingType, double temperatureInC);
-
 typedef struct {
   CoolingType coolingType;
   char brand[48];
 } BatteryCharacter;
+
+BreachType inferBreach(CoolingType coolingType, double temperatureInC);
 
 void checkAndAlert(
   AlertTarget alertTarget, BatteryCharacter batteryChar, double temperatureInC);

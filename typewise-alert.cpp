@@ -1,41 +1,101 @@
 #include "typewise-alert.h"
 #include <stdio.h>
+#include <vector>
 
-BreachType inferBreach(double value, double lowerLimit, double upperLimit) {
-  if(value < lowerLimit) {
-    return TOO_LOW;
-  }
-  if(value > upperLimit) {
-    return TOO_HIGH;
-  }
-  return NORMAL;
-}
+const int lowLimit                 = 0;
+const int PassiveCoolingLimit      = 35;
+const int MediumActiveCoolingLimit = 40;
+const int HighActiveCoolingLimit   = 45;
 
-BreachType classifyTemperatureBreach(
-    CoolingType coolingType, double temperatureInC) {
+class CoolingBaseSollution{
+  public:
+  CoolingType coolType = UNDEFINED_COOLING;
   int lowerLimit = 0;
   int upperLimit = 0;
-  switch(coolingType) {
-    case PASSIVE_COOLING:
-      lowerLimit = 0;
-      upperLimit = 35;
-      break;
-    case HI_ACTIVE_COOLING:
-      lowerLimit = 0;
-      upperLimit = 45;
-      break;
-    case MED_ACTIVE_COOLING:
-      lowerLimit = 0;
-      upperLimit = 40;
-      break;
+
+  CoolingBaseSollution(CoolingType cType, int lowLimit, int highLimit):
+    coolType(cType),
+    lowerLimit(lowLimit),
+    upperLimit(highLimit)
+  {}
+
+  bool isTemperatureLow(double value){
+    return (value < lowerLimit);
   }
-  return inferBreach(temperatureInC, lowerLimit, upperLimit);
+  bool isTemperatureHigh(double value){
+    return (value > upperLimit);
+  }
+
+  BreachType checkTemperatureBreach(double value){
+    if(isTemperatureLow(value)) return BreachType::TOO_LOW;
+    if(isTemperatureHigh(value)) return BreachType::TOO_HIGH; 
+    return BreachType::NORMAL;
+  }
+};
+
+class PassiveCooling : public CoolingBaseSollution{
+  public: 
+    PassiveCooling():CoolingBaseSollution(
+      CoolingType::PASSIVE_COOLING,
+      lowLimit,
+      PassiveCoolingLimit)
+    {};
+};
+
+
+class MediumActiveCooling : public CoolingBaseSollution{
+  public: 
+    MediumActiveCooling():CoolingBaseSollution(
+      CoolingType::MED_ACTIVE_COOLING,
+      lowLimit,
+      MediumActiveCoolingLimit)
+    {};
+};
+
+class HighActiveCooling : public CoolingBaseSollution{
+  public: 
+    HighActiveCooling():CoolingBaseSollution(
+      CoolingType::HI_ACTIVE_COOLING,
+      lowLimit,
+      HighActiveCoolingLimit)
+    {};
+};
+
+class CoolingSollutionFactory{
+  public:
+  PassiveCooling      pCooling;
+  MediumActiveCooling mCooling;
+  HighActiveCooling   hCooling;
+
+  std::vector<CoolingBaseSollution*> coolingSollutions = \
+    {&pCooling, &mCooling, &hCooling};
+
+  CoolingSollutionFactory(){}
+
+  CoolingBaseSollution* getSollution(CoolingType activeType){
+    for(std::vector<CoolingBaseSollution*>::iterator it = coolingSollutions.begin();
+        it != coolingSollutions.end(); it++){
+      if((*it)->coolType == activeType){
+        return (*it);
+      }
+    }
+    return nullptr;
+  }
+};
+
+BreachType inferBreach(
+    CoolingType coolingType, double temperatureInC) {
+  CoolingSollutionFactory coolingFactory;
+  CoolingBaseSollution* coolingSollution;
+  coolingSollution = coolingFactory.getSollution(coolingType);
+  return coolingSollution->checkTemperatureBreach(temperatureInC);
 }
 
-void checkAndAlert(
-    AlertTarget alertTarget, BatteryCharacter batteryChar, double temperatureInC) {
+void monitorTemperature(
+  AlertTarget alertTarget, BatteryCharacter batteryChar,\
+  double temperatureInC){
 
-  BreachType breachType = classifyTemperatureBreach(
+  BreachType breachType = inferBreach(
     batteryChar.coolingType, temperatureInC
   );
 
