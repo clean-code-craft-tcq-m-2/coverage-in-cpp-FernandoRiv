@@ -15,3 +15,19 @@ TEST_CASE("Breach test for High active cooling, all temperatures") {
           == BreachType::TOO_LOW);
 }
 
+TEST_CASE("Breach test for Undefined cooling sollution") {
+  int DegreesC = HighActiveCoolingLimit;
+  REQUIRE(inferBreach(CoolingType::UNDEFINED_COOLING, DegreesC)\
+          == BreachType::UNDEFINED);
+}
+
+TEST_CASE("Handler test for all targets") {
+  BreachBaseHandler* handlerTester;
+  BreachHandlerFactory handlerFactory;
+  handlerTester = getBreachHandler(AlertTarget::TO_CONTROLLER, handlerFactory);
+  REQUIRE(handlerTester->target == AlertTarget::TO_CONTROLLER);
+  handlerTester = getBreachHandler(AlertTarget::TO_EMAIL, handlerFactory);
+  REQUIRE(handlerTester->target == AlertTarget::TO_EMAIL);
+  handlerTester = getBreachHandler(AlertTarget::UNDEFINED_TARGET, handlerFactory);
+  REQUIRE(handlerTester == nullptr);
+}
