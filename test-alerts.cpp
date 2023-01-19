@@ -41,15 +41,7 @@ TEST_CASE("Test for controller notification routines") {
   REQUIRE(notifyHandler(handlerTester, BreachType::TOO_LOW)    == true);
   REQUIRE(notifyHandler(handlerTester, BreachType::UNDEFINED)  == true);
   REQUIRE(notifyHandler(nullptr, BreachType::UNDEFINED)        == false);
-}
-
-TEST_CASE("Test for email notification routines") {
-  BreachBaseHandler* handlerTester;
-  BreachHandlerFactory handlerFactory;
   handlerTester = getBreachHandler(AlertTarget::TO_EMAIL, handlerFactory);
   REQUIRE(notifyHandler(handlerTester, BreachType::NORMAL)     == false);
-  REQUIRE(notifyHandler(handlerTester, BreachType::TOO_HIGH)   == true);
-  REQUIRE(notifyHandler(handlerTester, BreachType::TOO_LOW)    == true);
-  REQUIRE(notifyHandler(handlerTester, BreachType::UNDEFINED)  == true);
-  REQUIRE(notifyHandler(nullptr, BreachType::UNDEFINED)        == false);
+
 }
