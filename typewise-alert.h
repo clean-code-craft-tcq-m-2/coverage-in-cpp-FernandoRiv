@@ -84,9 +84,10 @@ class EmailHandler : public BreachBaseHandler{
     if(breach != BreachType::NORMAL){
       const char* recepient = "a.b@c.com";
       printf("To: %s\n", recepient);
-      printf("Hi, the temperature is %s", bPrompt.at(breach).c_str());
+      printf("Hi, the temperature is %s\n", bPrompt.at(breach).c_str());
+      return true;
     }
-    return true;
+    return false;
   }
 };
 

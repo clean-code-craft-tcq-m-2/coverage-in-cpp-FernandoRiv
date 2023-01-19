@@ -31,3 +31,20 @@ TEST_CASE("Handler test for all targets") {
   handlerTester = getBreachHandler(AlertTarget::UNDEFINED_TARGET, handlerFactory);
   REQUIRE(handlerTester == nullptr);
 }
+
+TEST_CASE("Test for notification routines") {
+  BreachBaseHandler* handlerTester;
+  BreachHandlerFactory handlerFactory;
+  handlerTester = getBreachHandler(AlertTarget::TO_CONTROLLER, handlerFactory);
+  REQUIRE(notifyHandler(handlerTester, BreachType::NORMAL)     == true);
+  REQUIRE(notifyHandler(handlerTester, BreachType::TOO_HIGH)   == true);
+  REQUIRE(notifyHandler(handlerTester, BreachType::TOO_LOW)    == true);
+  REQUIRE(notifyHandler(handlerTester, BreachType::UNDEFINED)  == true);
+  REQUIRE(notifyHandler(nullptr, BreachType::UNDEFINED)        == false);
+  handlerTester = getBreachHandler(AlertTarget::TO_EMAIL, handlerFactory);
+  REQUIRE(notifyHandler(handlerTester, BreachType::NORMAL)     == false);
+  REQUIRE(notifyHandler(handlerTester, BreachType::TOO_HIGH)   == true);
+  REQUIRE(notifyHandler(handlerTester, BreachType::TOO_LOW)    == true);
+  REQUIRE(notifyHandler(handlerTester, BreachType::UNDEFINED)  == true);
+  REQUIRE(notifyHandler(nullptr, BreachType::UNDEFINED)        == false);
+}
